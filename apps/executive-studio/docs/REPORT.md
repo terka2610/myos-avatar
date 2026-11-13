@@ -6,11 +6,13 @@
 
 ## Preview
 
-Isolated project `myos-executive-studio-preview`, deployment `dpl_3P82ysYBBKse7orsaK93hyNLaVVv`.
+Isolated project `myos-executive-studio-preview`. The working deployment is a preview (`target` unset), behind Vercel Authentication:
 
-https://myos-executive-studio-preview-3l7yiftr9-mmedcon-techs-projects.vercel.app/
+https://myos-executive-studio-preview-bdrmq7m59-mmedcon-techs-projects.vercel.app/
 
-Vercel labeled that first deployment `production` even though `target` was omitted. It is a new project, behind Vercel Authentication, and it does not replace the existing CEO consultation demo. The studio still refuses a durable database in that environment and uses `/tmp`, so records there are ephemeral. The original demo URL still returns the unchanged static preview.
+`GET /api/health` returns `{"ok":true,"persistence":"ephemeral","llmConfigured":false,"admin":"closed"}`.
+
+Vercel labeled the project's first deployment production even though no target was requested. That deployment's API returned 500 because the studio refused a database. The follow-up preview allows only an ephemeral `/tmp` file in that situation, and it does not replace the existing CEO consultation demo. The original demo URL still returns the unchanged static preview. Records on this preview can disappear when the server sleeps.
 
 ## Implemented
 
@@ -59,5 +61,5 @@ A headless Chrome walk opened a consultation, showed 8.7 hours from 4 × 30 minu
 - This repository has no existing OpenAI integration and no key. The model path is implemented and uncalled.
 - The Vercel account available here is not the account that hosts `myos-ceo-consultation-demo`. That project was not modified.
 - Vercel marked the new project's first deployment as production. No durable database is attached. The deployment is behind Vercel Authentication.
-- The first build's API returned 500 because the studio refused to open a database while `VERCEL_ENV` was `production`. A follow-up allows only an ephemeral `/tmp` file in that case. A second deployment carries that fix.
+- The first deployment's API returned 500 because `VERCEL_ENV` was `production`. The preview above carries the fix and reports an ephemeral database.
 - No staging database was provisioned. Creating one would be new infrastructure and was not approved.
