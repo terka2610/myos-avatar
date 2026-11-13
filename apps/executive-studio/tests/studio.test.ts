@@ -1,6 +1,5 @@
 import { createHash } from "crypto";
 import fs from "fs";
-import os from "os";
 import path from "path";
 import { describe, expect, it } from "vitest";
 import { CAPABILITIES } from "../lib/capabilities";
@@ -472,10 +471,14 @@ describe("persistence, tenancy and consent", () => {
     });
   });
 
-  it("refuses to open a production database", () => {
+  it("refuses a durable database in production and allows only an ephemeral file", () => {
     const previous = process.env.APP_ENV;
     process.env.APP_ENV = "production";
-    expect(() => openStore(path.join(os.tmpdir(), "studio-test.db"))).toThrow(/production/);
+    expect(() => openStore("/workspace/studio-should-not-open.db")).toThrow(/production/);
+    const ephemeral = openStore("/tmp/myos-studio-guard-test.db");
+    expect(ephemeral.persistence).toBe("ephemeral");
+    ephemeral.close();
+    fs.rmSync("/tmp/myos-studio-guard-test.db", { force: true });
     if (previous === undefined) delete process.env.APP_ENV;
     else process.env.APP_ENV = previous;
   });

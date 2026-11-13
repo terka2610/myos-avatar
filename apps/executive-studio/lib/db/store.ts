@@ -238,14 +238,14 @@ CREATE TABLE IF NOT EXISTS usage_events (
 `;
 
 export function assertSafeEnvironment(filename: string): void {
-  const vercelEnv = process.env.VERCEL_ENV;
-  const appEnv = process.env.APP_ENV;
-  if (vercelEnv === "production" || appEnv === "production") {
-    throw new Error("Refusing to open the studio database while the environment is production.");
-  }
   const lower = filename.toLowerCase();
   if (lower.includes("production.db") || /\/prod(\/|$)/.test(lower)) {
     throw new Error("Refusing a database path that looks like production.");
+  }
+  const production = process.env.VERCEL_ENV === "production" || process.env.APP_ENV === "production";
+  const ephemeral = filename === ":memory:" || filename.startsWith("/tmp/");
+  if (production && !ephemeral) {
+    throw new Error("Refusing to open a durable studio database while the environment is production.");
   }
 }
 

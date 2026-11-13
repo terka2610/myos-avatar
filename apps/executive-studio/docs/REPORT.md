@@ -6,7 +6,11 @@
 
 ## Preview
 
-Not deployed in the first pass. A separate Vercel preview is attempted only as a new project, never against the existing CEO consultation demo. The URL, or the reason it could not be created, is recorded in the pull request.
+Isolated project `myos-executive-studio-preview`, deployment `dpl_3P82ysYBBKse7orsaK93hyNLaVVv`.
+
+https://myos-executive-studio-preview-3l7yiftr9-mmedcon-techs-projects.vercel.app/
+
+Vercel labeled that first deployment `production` even though `target` was omitted. It is a new project, behind Vercel Authentication, and it does not replace the existing CEO consultation demo. The studio still refuses a durable database in that environment and uses `/tmp`, so records there are ephemeral. The original demo URL still returns the unchanged static preview.
 
 ## Implemented
 
@@ -53,5 +57,7 @@ A headless Chrome walk opened a consultation, showed 8.7 hours from 4 × 30 minu
 ## Blockers
 
 - This repository has no existing OpenAI integration and no key. The model path is implemented and uncalled.
-- The Vercel account available here is not the account that hosts `myos-ceo-consultation-demo`. That project was not modified. Preview deployment is separate and recorded on the pull request.
+- The Vercel account available here is not the account that hosts `myos-ceo-consultation-demo`. That project was not modified.
+- Vercel marked the new project's first deployment as production. No durable database is attached. The deployment is behind Vercel Authentication.
+- The first build's API returned 500 because the studio refused to open a database while `VERCEL_ENV` was `production`. A follow-up allows only an ephemeral `/tmp` file in that case. A second deployment carries that fix.
 - No staging database was provisioned. Creating one would be new infrastructure and was not approved.
