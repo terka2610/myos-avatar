@@ -31,7 +31,7 @@ export function buildBrief(input: {
     `${L(locale, "Last example", "Ultimo esempio")}: ${answers.last_example?.trim() || L(locale, "[not provided]", "[non indicato]")}`,
     `${L(locale, "How it is handled today", "Come viene gestito oggi")}: ${answers.current_handling?.trim() || L(locale, "[not provided]", "[non indicato]")}`,
     `${L(locale, "Owner", "Responsabile")}: ${answers.owner?.trim() || L(locale, "[not identified]", "[non indicato]")}`,
-    `${L(locale, "Time involved", "Tempo impegnato")}: ${round1(burden.weeklyMinutes)} ${L(locale, "minutes/week", "minuti/settimana")} · ${round1(burden.monthlyHours)} ${L(locale, "hours/month", "ore/mese")} · ${burden.formula}`,
+    `${L(locale, "Time involved", "Tempo impegnato")}: ${round1(burden.weeklyMinutes)} ${L(locale, "minutes/week", "minuti/settimana")} · ${round1(burden.monthlyHours)} ${L(locale, "hours/month", "ore/mese")} · ${L(locale, "times per week × minutes each × (52 / 12)", "volte a settimana × minuti × (52 / 12)")}`,
     L(locale, "This is not a measured saving.", "Non è un risparmio misurato."),
     `${L(locale, "Consequence", "Conseguenza")}: ${answers.consequence?.trim() || L(locale, "[not provided]", "[non indicato]")}`,
     `${L(locale, "Already tried", "Già provato")}: ${answers.already_tried?.trim() || L(locale, "[not provided]", "[non indicato]")}`,

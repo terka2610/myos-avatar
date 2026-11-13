@@ -19,7 +19,7 @@ export class ServiceError extends Error {
 
 export type RecommendationResult = {
   source: "rules" | "llm";
-  fallbackReason: LlmOutcome["reason"] | null;
+  fallbackReason: Extract<LlmOutcome, { ok: false }>["reason"] | null;
   recommendation: Recommendation;
 };
 
@@ -76,6 +76,13 @@ export function createServices(store: Store, options?: { llm?: LlmClient }) {
     listOrganizations(session: Session) {
       return store.listOrganizations(session.userId);
     },
+    grantAdmin(session: Session, token: string, adminCode: string) {
+      if (!adminPermitted(adminCode)) throw new ServiceError("admin_code_required", 403);
+      store.setRole(session.userId, session.orgId, "admin");
+      const next = store.sessionFromToken(token);
+      if (!next) throw new ServiceError("unauthorized", 401);
+      return next;
+    },
     switchOrganization(token: string, orgId: string): Session {
       const session = store.switchOrganization(token, orgId);
       if (!session) throw new ServiceError("not_found", 404);
@@ -103,6 +110,10 @@ export function createServices(store: Store, options?: { llm?: LlmClient }) {
     listConsultations(session: Session) {
       return store.listConsultations(session.orgId);
     },
+    consents(session: Session, id: string) {
+      requireConsultation(session, id);
+      return store.listConsents(session.orgId, id);
+    },
     timeline(session: Session, id: string) {
       requireConsultation(session, id);
       return store.events(session.orgId, id);
@@ -128,7 +139,7 @@ export function createServices(store: Store, options?: { llm?: LlmClient }) {
         }
         const recommendation = buildRecommendation(input);
         store.saveRecommendation(session.orgId, id, "rules", recommendation);
-        return { source: "rules", fallbackReason: outcome.reason, recommendation };
+        return { source: "rules", fallbackReason: outcome.ok ? null : outcome.reason, recommendation };
       }
       const recommendation = buildRecommendation(input);
       store.saveRecommendation(session.orgId, id, "rules", recommendation);
@@ -136,9 +147,8 @@ export function createServices(store: Store, options?: { llm?: LlmClient }) {
     },
     generateProposal(session: Session, id: string) {
       const consultation = requireConsultation(session, id);
-      const stored = store.latestRecommendation(session.orgId, id);
-      const recommendation = (stored?.payload as Recommendation | undefined) ?? buildRecommendation(engineInput(session, consultation));
-      if (!stored) store.saveRecommendation(session.orgId, id, "rules", recommendation);
+      const recommendation = buildRecommendation(engineInput(session, consultation));
+      store.saveRecommendation(session.orgId, id, "rules", recommendation);
       const priced = quote(store.listPlans(), store.listAddons(), usageFromAnswers(consultation.answers, consultation.pain));
       const proposal = {
         painPoints: [consultation.pain].filter(Boolean),
@@ -170,7 +180,8 @@ export function createServices(store: Store, options?: { llm?: LlmClient }) {
     exportSummary(session: Session, id: string) {
       const consultation = requireConsultation(session, id);
       const stored = store.latestRecommendation(session.orgId, id);
-      const recommendation = (stored?.payload as Recommendation | undefined) ?? null;
+      const recommendation = buildRecommendation(engineInput(session, consultation));
+      const modelDraft = stored?.source === "llm" ? stored.payload : null;
       const priced = quote(store.listPlans(), store.listAddons(), usageFromAnswers(consultation.answers, consultation.pain));
       const brief = buildBrief({ consultation, recommendation, quote: priced, locale: consultation.language });
       return {
@@ -178,6 +189,7 @@ export function createServices(store: Store, options?: { llm?: LlmClient }) {
         document: {
           consultation,
           recommendation,
+          modelDraft,
           quote: priced,
           consents: store.listConsents(session.orgId, id).map((record) => ({ kind: record.kind, granted: record.granted, at: record.createdAt })),
           onboarding: store.getOnboarding(session.orgId, id),
@@ -244,7 +256,8 @@ export function createServices(store: Store, options?: { llm?: LlmClient }) {
       for (const value of Object.values(patch)) {
         if (typeof value === "number" && (!Number.isFinite(value) || value < 0)) throw new ServiceError("invalid_price", 400);
       }
-      const updated = store.updatePlan(session.userId, code, patch);
+      const defined = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)) as typeof patch;
+      const updated = store.updatePlan(session.userId, code, defined);
       if (!updated) throw new ServiceError("not_found", 404);
       return updated;
     },
@@ -272,6 +285,13 @@ export function createServices(store: Store, options?: { llm?: LlmClient }) {
 }
 
 export type Services = ReturnType<typeof createServices>;
+
+export function adminAccess(): "development" | "code" | "closed" {
+  if (process.env.STUDIO_ADMIN_CODE) return "code";
+  const env = process.env.APP_ENV || process.env.VERCEL_ENV || "development";
+  if (env === "development" || env === "test") return "development";
+  return "closed";
+}
 
 function adminPermitted(provided: string | undefined): boolean {
   const expected = process.env.STUDIO_ADMIN_CODE;

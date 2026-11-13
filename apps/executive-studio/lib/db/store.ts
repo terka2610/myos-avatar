@@ -17,6 +17,7 @@ export type Store = {
   createOrganization(userId: string, name: string): { id: string; name: string; role: Role };
   switchOrganization(token: string, orgId: string): Session | null;
   listOrganizations(userId: string): { id: string; name: string; role: Role }[];
+  setRole(userId: string, orgId: string, role: Role): void;
   createConsultation(input: {
     orgId: string;
     userId: string;
@@ -345,6 +346,9 @@ function bind(db: DatabaseSync, filename: string, persistence: Persistence): Sto
       if (!member) return null;
       db.prepare("UPDATE sessions SET org_id = ? WHERE token_hash = ?").run(orgId, hashToken(token));
       return api.sessionFromToken(token);
+    },
+    setRole(userId, orgId, role) {
+      db.prepare("UPDATE memberships SET role = ? WHERE user_id = ? AND org_id = ?").run(role, userId, orgId);
     },
     listOrganizations(userId) {
       return db

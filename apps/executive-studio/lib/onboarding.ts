@@ -79,7 +79,7 @@ export const REMOTE_GUIDES: GuideBlock[] = [
     title: { en: "Voice", it: "Voce" },
     body: {
       en: "A guided recording of about 20 minutes of clean speech is the working target for a premium clone, in Italian and in English. The file stays on this device in the preview and is not uploaded.",
-      it: "Una registrazione guidata di circa 20 minuti di voce pulita è l'obiettivo di lavoro per una clonazione di livello alto, in italiano e in inglese. Nel preview il file resta su questo dispositivo e non viene caricato.",
+      it: "Una registrazione guidata di circa 20 minuti di voce pulita è l'obiettivo di lavoro per una clonazione di livello alto, in italiano e in inglese. In questa anteprima il file resta su questo dispositivo e non viene caricato.",
     },
   },
 ];

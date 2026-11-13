@@ -402,7 +402,8 @@ describe("persistence, tenancy and consent", () => {
           init?.signal?.addEventListener("abort", abort);
         }),
     });
-    expect(timed.reason).toBe("timeout");
+    expect(timed.ok).toBe(false);
+    if (!timed.ok) expect(timed.reason).toBe("timeout");
     store.close();
   });
 
