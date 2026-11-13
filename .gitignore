@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+data/
+*.db
+*.db-*
+.env
+.env.*
+!.env.example
+.vercel/
+.DS_Store
+*.log
+apps/executive-studio/.next/
+apps/executive-studio/data/
+apps/executive-studio/tsconfig.tsbuildinfo
